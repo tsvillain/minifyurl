@@ -24,9 +24,9 @@ class UrlController {
         throw new HttpError(404, `No urls exist by creator_id: ${creator_id}`);
       }
 
-      const modifiedUrls = urls.filter((url) => {
+      const modifiedUrls = urls.map((url) => {
         return {
-          ...url,
+          ...url.toJSON(),
           url_prefix: prefixUrl,
           full_url: `${prefixUrl}/${url.code}`,
         };
@@ -46,7 +46,35 @@ class UrlController {
     }
   };
 
-  // TODO: if a creator is creating same url, update the existing one expire_in only.
+  private getUrlByCode = async (code: String) => {
+    return await UrlModel.findOne({ code: code });
+  };
+
+  private createNewRecordAndReturn = async (
+    url: String,
+    code: String,
+    creator_id: String,
+    expire_in: number,
+    prefixUrl: String,
+    res: Response
+  ) => {
+    const newShortUrl = await UrlModel.create({
+      original_url: url,
+      code: code,
+      creator_id: creator_id,
+      visit_count: 0,
+      expired_at: addDays(new Date(), expire_in),
+    });
+
+    res.status(201).json(
+      createResponse("success", "Short Url created successfully", {
+        ...newShortUrl.toJSON(),
+        url_prefix: prefixUrl,
+        full_url: `${prefixUrl}/${newShortUrl.code}`,
+      })
+    );
+  };
+
   public createNewUrl = async (
     req: Request,
     res: Response,
@@ -64,21 +92,43 @@ class UrlController {
 
       const code = urlToShortString(url, creator_id);
 
-      const newShortUrl = await UrlModel.create({
-        original_url: url,
-        code: code,
-        creator_id: creator_id,
-        visit_count: 0,
-        expired_at: addDays(new Date(), expire_in),
-      });
+      const existingUrl = await this.getUrlByCode(code);
 
-      res.status(201).json(
-        createResponse("success", "Short Url created successfully", {
-          ...newShortUrl.toJSON(),
-          url_prefix: prefixUrl,
-          full_url: `${prefixUrl}/${newShortUrl.code}`,
-        })
-      );
+      if (existingUrl != null) {
+        const updatedShortUrl = await UrlModel.findByIdAndUpdate(
+          existingUrl._id,
+          { expired_at: addDays(new Date(), expire_in) },
+          { new: true }
+        );
+
+        if (updatedShortUrl != null) {
+          res.status(200).json(
+            createResponse("success", "Short Url created successfully", {
+              ...updatedShortUrl.toJSON(),
+              url_prefix: prefixUrl,
+              full_url: `${prefixUrl}/${updatedShortUrl.code}`,
+            })
+          );
+        } else {
+          this.createNewRecordAndReturn(
+            url,
+            code,
+            creator_id,
+            expire_in,
+            prefixUrl,
+            res
+          );
+        }
+      } else {
+        this.createNewRecordAndReturn(
+          url,
+          code,
+          creator_id,
+          expire_in,
+          prefixUrl,
+          res
+        );
+      }
     } catch (error) {
       next(error);
     }

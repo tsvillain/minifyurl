@@ -2,6 +2,7 @@ import express from "express";
 import envConfig from "./config/env";
 import { initDatabase } from "./config/database";
 import ShortUrlRoutes from "./routes/url.routes";
+import RedirectRoutes from "./routes/redirect.routes";
 import { errorMiddleware } from "./middleware/error.middleware";
 
 const startServer = async () => {
@@ -9,15 +10,10 @@ const startServer = async () => {
 
   app.use(express.json());
 
-  app.get("/", (req, res) => {
-    res.send("Welcome to Short URL");
-  });
-  
   app.use("/api", ShortUrlRoutes);
 
-  // TODO: Create new route to redirect user to original url
+  app.use("/", RedirectRoutes);
 
-  // TODO: Create middleware to increment the visit_count
   app.use(errorMiddleware);
 
   try {
