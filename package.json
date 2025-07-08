@@ -1,4 +1,24 @@
 {
+  "name": "minifyurl",
+  "version": "1.0.0",
+  "description": "A fast and simple URL shortener backend API.",
+  "author": "Tekeshwar Singh <tekeshwarsingh2000@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tsvillain/minifyurl"
+  },
+  "homepage": "https://github.com/tsvillain/minifyurl",
+  "bugs": {
+    "url": "https://github.com/tsvillain/minifyurl/issues"
+  },
+  "keywords": [
+    "url shortener",
+    "api",
+    "nodejs",
+    "express",
+    "portfolio"
+  ],
   "dependencies": {
     "base62": "^2.0.2",
     "dotenv": "^17.0.0",
