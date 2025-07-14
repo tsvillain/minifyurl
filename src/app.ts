@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import logger from "./utils/logger";
 import envConfig from "./config/env";
 import { initDatabase } from "./config/database";
@@ -12,6 +13,10 @@ const startServer = async () => {
 
   app.use(express.json());
   logger.info("Registered JSON middleware");
+
+  // Allow all origins
+  app.use(cors());
+  logger.info("CORS enabled for all origins");
 
   // Log each incoming request
   app.use((req, res, next) => {
